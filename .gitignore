@@ -1,0 +1,5 @@
+# Ignore Maven's target directory
+/target/
+
+# Ignore pom.xml file
+/pom.xml

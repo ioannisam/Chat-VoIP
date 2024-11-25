@@ -2,6 +2,7 @@ package com.cn2.communication;
 
 import java.io.*;
 import java.net.*;
+import javax.sound.sampled.*;
 
 import javax.swing.JFrame;
 import javax.swing.JTextField;
@@ -18,119 +19,109 @@ import java.lang.Thread;
 
 public class App extends Frame implements WindowListener, ActionListener {
 
-	/*
-	 * Definition of the app's fields
-	 */
 	static TextField inputTextField;		
 	static JTextArea textArea;				 
 	static JFrame frame;					
 	static JButton sendButton;				
-	static JTextField meesageTextField;		  
+	static JTextField messageTextField;		  
 	public static Color gray;				
 	final static String newline="\n";		
-	static JButton callButton;				
+	static JButton callButton;		
 	
-	// TODO: Please define and initialize your variables here...
-	
-	/**
-	 * Construct the app's frame and initialize important parameters
-	 */
 	public App(String title) {
 		
-		/*
-		 * 1. Defining the components of the GUI
-		 */
-		
-		// Setting up the characteristics of the frame
+		// setting up the characteristics of the frame
 		super(title);									
 		gray = new Color(254, 254, 254);		
 		setBackground(gray);
 		setLayout(new FlowLayout());			
 		addWindowListener(this);	
 		
-		// Setting up the TextField and the TextArea
+		// setting up the TextField and the TextArea
 		inputTextField = new TextField();
 		inputTextField.setColumns(20);
 		
-		// Setting up the TextArea.
+		// setting up the TextArea.
 		textArea = new JTextArea(10,40);			
 		textArea.setLineWrap(true);				
 		textArea.setEditable(false);			
 		JScrollPane scrollPane = new JScrollPane(textArea);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		
-		//Setting up the buttons
+		// setting up the buttons
 		sendButton = new JButton("Send");			
 		callButton = new JButton("Call");			
 						
-		/*
-		 * 2. Adding the components to the GUI
-		 */
 		add(scrollPane);								
 		add(inputTextField);
 		add(sendButton);
 		add(callButton);
 		
-		/*
-		 * 3. Linking the buttons to the ActionListener
-		 */
 		sendButton.addActionListener(this);			
 		callButton.addActionListener(this);	
-
-		
 	}
 	
-	/**
-	 * The main method of the application. It continuously listens for
-	 * new messages.
-	 */
 	public static void main(String[] args){
 	
-		/*
-		 * 1. Create the app's window
-		 */
-		App app = new App("CN2 - AUTH");  // TODO: You can add the title that will displayed on the Window of the App here																		  
+		App app = new App("Chat-VoIP");																		  
 		app.setSize(500,250);				  
 		app.setVisible(true);				  
 
-		/*
-		 * 2. 
-		 */
-		do{		
-			// TODO: Your code goes here...
-		}while(true);
+		// start a thread to listen for incoming messages
+        Thread receiveThread = new Thread(() -> {
+            DatagramSocket socket = null;
+            try {
+				// listen to port 12345 for inbound text messages
+                socket = new DatagramSocket(12345);
+                byte[] buffer = new byte[1024];
+
+				// continuously listen for incoming messages
+                while(true) {
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(packet);
+                    String receivedMessage = new String(packet.getData(), 0, packet.getLength());
+                    textArea.append("Remote: " + receivedMessage + newline);
+                }
+            } catch(Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                if(socket != null && !socket.isClosed()) {
+                    socket.close();
+                }
+            }
+        });
+        receiveThread.start();
 	}
 	
-	/**
-	 * The method that corresponds to the Action Listener. Whenever an action is performed
-	 * (i.e., one of the buttons is clicked) this method is executed. 
-	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		
-	
 
-		/*
-		 * Check which button was clicked.
-		 */
-		if (e.getSource() == sendButton){
-			
-			// The "Send" button was clicked
-			
-			// TODO: Your code goes here...
-		
-			
-		}else if(e.getSource() == callButton){
-			
-			// The "Call" button was clicked
-			
-			// TODO: Your code goes here...
-			
-			
-		}
-			
-
+		if(e.getSource() == sendButton) {
+            handleSendButton();
+        } else if (e.getSource() == callButton) {
+			// TODO: implement call button functionality
+        }
 	}
+
+	private void handleSendButton() {
+        try {
+            // get user input
+            String message = inputTextField.getText();
+            byte[] buffer  = message.getBytes();
+            InetAddress receiverAddress = InetAddress.getByName("RECEIVER_IP"); // replace with actual receiver IP
+            int port = 12345; // text message port
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, port);
+
+            DatagramSocket socket = new DatagramSocket();
+            socket.send(packet);
+            socket.close();
+
+            textArea.append("Local: " + message + newline);
+            inputTextField.setText("");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } 
+    }
 
 	/**
 	 * These methods have to do with the GUI. You can use them if you wish to define
