@@ -56,7 +56,7 @@ Please consider installing and using the following applications and tools for th
 If the compilation is successful the GUI of the application will be displayed on your screen. The GUI is presented below: 
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/713e81b5-f7bc-44ec-8d6c-56fa77288c2d" alt="cn2-cnv-1">
+  <img src="documentation/assets/Chat.png" alt="GUI">
 </p>
 
 As can be seen by the figure above, the application contains a Text Field that is used for writing the messages that need to be sent to the other peer, a Text Area for displaying the messages that have been sent or received, and two buttons. The "Send" button is responsible for sending the messages that are typed into the Text Field. The "Call" button is responsible for initiating a VoIP call with the remote peer (i.e., for starting listening for voice packets and sending voice packets captured from the computer's microphone).
@@ -69,5 +69,4 @@ As can be seen by the figure above, the application contains a Text Field that i
 
 ## 📄 Useful Material
 
-- The original description of the assignment can be found [here](https://sites.google.com/view/computer-networks-ii/%CE%B5%CF%81%CE%B3%CE%B1%CF%83%CE%AF%CE%B5%CF%82)
-- Additional content for the assignement will be uploaded [here](https://sites.google.com/view/computer-networks-ii)
+- The original description of the assignment can be found in the documentation folder.
