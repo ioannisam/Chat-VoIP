@@ -10,12 +10,14 @@ import javax.swing.JButton;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.Color;
-import java.lang.Thread;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
 
 public class App extends Frame implements WindowListener, ActionListener {
 
@@ -31,7 +33,19 @@ public class App extends Frame implements WindowListener, ActionListener {
     // call variables
     private DatagramSocket sendSocket;
     private DatagramSocket receiveSocket;
-    private boolean        callActive = false;      
+    private boolean        callActive = false;
+
+    // cryptography variables
+    private static SecretKey secretKey;
+
+    static {
+        try {
+            byte[] keyBytes = "1234567890123456".getBytes(); // example key (16 bytes)
+            secretKey = new SecretKeySpec(keyBytes, "AES");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }    
     
     public App(String title) {
         
@@ -84,8 +98,9 @@ public class App extends Frame implements WindowListener, ActionListener {
                 while(true) {
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     socket.receive(packet);
-                    String receivedMessage = new String(packet.getData(), 0, packet.getLength());
-                    textArea.append("Remote: " + receivedMessage + newline);
+                    String encryptedMessage = new String(packet.getData(), 0, packet.getLength());
+                    String message = app.decryptMessage(encryptedMessage);
+                    textArea.append("Remote: " + message + newline);
                 }
             } catch(Exception ex) {
                 ex.printStackTrace();
@@ -118,7 +133,8 @@ public class App extends Frame implements WindowListener, ActionListener {
         try {
             // get user input
             String message = inputTextField.getText();
-            byte[] buffer  = message.getBytes();
+            String encryptedMessage = encryptMessage(message);
+            byte[] buffer  = encryptedMessage.getBytes();
             InetAddress receiverAddress = InetAddress.getByName("RECEIVER_IP"); // replace with actual receiver IP
             int port = 12345; // text message port
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, receiverAddress, port);
@@ -218,6 +234,20 @@ public class App extends Frame implements WindowListener, ActionListener {
         if(receiveSocket != null && !receiveSocket.isClosed()) {
             receiveSocket.close();
         }
+    }
+
+    private String encryptMessage(String message) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encryptedBytes = cipher.doFinal(message.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    private String decryptMessage(String encryptedMessage) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedMessage));
+        return new String(decryptedBytes);
     }
 
     /**
